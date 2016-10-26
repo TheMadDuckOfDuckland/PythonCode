@@ -1,12 +1,13 @@
 import pygame
+import random
 from pygame.locals import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__ (self):
-        super (Player, self).__init__()
-        self.surf = pygame.Surface((75, 75))
-        self.surf.fill((0,255,0))
-        self.rect = self.surf.get_rect()
+    def __init__(self):
+        super(Player, self) .__init__()
+        self.image = pygame.image.load('player.png').convert()
+        self.image.set_colorkey((225, 225, 225), RLEACCEL)
+        self.rect = self.image.get_rect()
     def update(self, pressed_keys):
         if pressed_keys [K_UP]:
             self.rect.move_ip(0,-1)
@@ -19,37 +20,65 @@ class Player(pygame.sprite.Sprite):
 
         if self.rect.left < 0:
             self.rect.left = 0
-        if self.rect.right > 1024:
-            self.rect.right = 1024
+        if self.rect.right > 1280:
+            self.rect.right = 1280
         if self.rect.top < 0:
             self.rect.top = 0
-        if self.rect.bottom > 1280:
-            self.rect.bottom = 1280
-                        
-pygame.init()
+        if self.rect.bottom > 950:
+            self.rect.bottom = 950
+            
+class Opponent(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Opponent, self) .__init__()
+        self.image = pygame.image.load('').convert()
+        self.image.get_rect()
+        center=(random.randint(1300, 1250), random.randint(0,900))
+    
+    def update(self):
+        self.rect.move_ip(-self.speed, 0)
+        if self.rect.right < 0:
+            self.kill()
+
+pygame.init()  
 
 
-screen=pygame.display.set_mode((1280, 1024))
+screen=pygame.display.set_mode((1280, 950))
 
 player = Player()
 
 background = pygame.Surface(screen.get_size())
-background.fill((255,255,0))
+background.fill((0,0,0))
+players = pygame.sprite.Group()
+opponents = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+ADDOPPONENT = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDOPPONENT, 250)
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 running = False
+                    
 
         elif event.type == QUIT:
             running = False
+        elif(event.type == ADDOPPONENT):
+            new_opponent = Opponent()
+            opponents.add(new_opponent)
+            all_sprites.add(new_opponent)
     screen.blit(background, (0,0))
 
     pressed_keys = pygame.key.get_pressed()
     player.update (pressed_keys)
+    opponents.update()
     
-    screen.blit(player.surf, player.rect)
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+    if pygame.sprite.spritecollideany(player, opponents):
+        player.kill()
     pygame.display.flip()
 #end pygame
 pygame.quit()
